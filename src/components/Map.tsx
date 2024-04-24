@@ -38,9 +38,7 @@ function GoogleMap({ lat, lng, markers }: { lat: number, lng: number, markers?: 
 
                             </div> */}
                             <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'}>
-                                <div className={`w-[32] h-[32] bg-red-500 opacity-50 rounded-full`}>
-
-                                </div> 
+                                
                             </Pin>
                         </AdvancedMarker>
                     </>

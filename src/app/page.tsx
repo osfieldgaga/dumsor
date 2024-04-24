@@ -20,7 +20,7 @@ export default function Home() {
       await addDoc(dataRef, {
         ...data,
       })
-      toast.success("All good!")
+      toast.success("Happy dumsor!")
     } catch (e) {
       toast.success("Try again later!")
       console.log("Couldn't add data:", e)
@@ -87,7 +87,7 @@ export default function Home() {
 
   useEffect(() => {
     // Use reduce to aggregate the data based on locality
-// Filter data points that are within the past hour
+    // Filter data points that are within the past hour
 
 
 
@@ -111,9 +111,9 @@ export default function Home() {
 
   return (
     <main className="flex h-screen w-full flex-col-reverse md:flex-row bg-white items-center justify-between gap-4 ">
-      <div className="w-full md:w-1/3 md:h-full h-1/4 flex flex-col justify-between px-4 py-2 p-6">
+      <div className="w-full md:w-1/3 md:h-full h-2/5 flex flex-col justify-start gap-2 md:justify-between px-4 py-2 p-6">
         <h1 className="text-2xl font-semibold">Dumsor</h1>
-        <div className="py-2 italic text-gray-500 text-sm">
+        <div className="md:py-2 italic text-gray-500 text-sm">
           Showing data collected over the past hour
         </div>
         <div className="h-full overflow-auto hidden md:block ">
@@ -140,9 +140,12 @@ export default function Home() {
             </>}
         </div>
         <div className="md:hidden">
-          
+
           <div className="text-gray-600">
-            {aggregateData.reduce((acc: any, curr: any) => curr.count + acc, 0)} reports
+            {aggregateData.reduce((acc: any, curr: any) => curr.count + acc, 0)} reports: {aggregateData.reduce((acc: any, curr: any) => curr.locality + ", " + acc, "")} latest at {new Date(dumsorData.reduce((maxTimestamp, point) => {
+              return Math.max(maxTimestamp, point.timestamp);
+            }, 0)).toLocaleTimeString()} 
+
           </div>
         </div>
         <Button disabled={loading} className="w-full" onClick={async () => {

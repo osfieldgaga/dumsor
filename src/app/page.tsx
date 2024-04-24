@@ -77,8 +77,7 @@ export default function Home() {
       snapshot.forEach((doc) => {
         snapData.push(doc.data());
       })
-
-      setDumsorData(snapData);
+      setDumsorData(snapData.filter((point: any) => Date.now() - point.timestamp <= 60 * 60 * 1000))
     })
 
     return () => {
@@ -88,6 +87,10 @@ export default function Home() {
 
   useEffect(() => {
     // Use reduce to aggregate the data based on locality
+// Filter data points that are within the past hour
+
+
+
     const aggregatedData = dumsorData.reduce((acc: any, curr: any) => {
       const locality = curr.locality;
       if (acc[locality]) {
@@ -160,7 +163,7 @@ export default function Home() {
             </>
             :
             <>
-              Record value
+              Report dumsor at my location
             </>}
 
         </Button>

@@ -1,33 +1,54 @@
 "use client"
-import { useEffect, useRef, useMemo } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
+import { APIProvider, AdvancedMarker, Map, Marker, Pin, useMap } from '@vis.gl/react-google-maps';
+import { useEffect, useState } from 'react';
 
 
-function Map({ address }: any) {
-    const mapRef = useRef(null);
-    const geocoder = useMemo(() => new google.maps.Geocoder(), []);
+function GoogleMap({ lat, lng, markers }: { lat: number, lng: number, markers?: { lat: number, lng: number }[] }) {
+    const position = { lat, lng };
+    const map = useMap('main_map');
+
+    const [zoom, setZoom] = useState(16)
+
     useEffect(() => {
-        const loader = new Loader({
-            apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-            version: "weekly",
-        });
-        loader.load().then(() => {
-            geocoder.geocode({ address: address }, (results: any, status: any) => {
-                if (status === "OK") {
-                    const map = new google.maps.Map(mapRef.current, {
-                        center: results[0].geometry.location,
-                        zoom: 8,
-                    });
-                    const marker = new google.maps.Marker({
-                        map: map,
-                        position: results[0].geometry.location,
-                    });
-                } else {
-                    console.error(`Geocode was not successful for the following reason: ${status}`);
-                }
-            });
-        });
-    }, [address, geocoder]);
-    return <div style={{ height: "400px" }} ref={mapRef} />;
+        if (!map) return;
+
+        console.log(map)
+        // do something with the map instance
+    }, [map]);
+    return (
+        <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY : ""}>
+            <Map id='main_map' onZoomChanged={(e) => {
+                console.log(`w-[${Math.ceil(128 * (zoom / 16)).toString()}px] h-[${Math.ceil(128 * (zoom / 16)).toString()}px]`)
+                setZoom(e.detail.zoom)
+            }} defaultCenter={position} defaultZoom={12} mapId={process.env.NEXT_PUBLIC_MAP_ID}>
+                {markers?.map((marker: any) => {
+                    return <>
+                        <Marker position={{
+                            lat: marker.latitude,
+                            lng: marker.longitude
+                        }} />
+                        <AdvancedMarker
+
+                            position={{
+                                lat: marker.latitude,
+                                lng: marker.longitude
+                            }}>
+                            {/* <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'}/> */}
+                            {/* <div className={`w-[${Math.ceil(128*(zoom/16)).toString()}px] h-[${Math.ceil(128*(zoom/16)).toString()}px] bg-red-500 opacity-50 rounded-full`}>
+
+                            </div> */}
+                            <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'}>
+                                <div className={`w-[32] h-[32] bg-red-500 opacity-50 rounded-full`}>
+
+                                </div> 
+                            </Pin>
+                        </AdvancedMarker>
+                    </>
+                })}
+
+            </Map>
+        </APIProvider>
+    );
 }
-export default Map;
+
+export default GoogleMap;

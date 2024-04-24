@@ -5,6 +5,8 @@ import { firestore } from "../../lib/config";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react"
 import toast from 'react-hot-toast'
+import { GoogleApiWrapper } from "google-maps-react";
+import GoogleMap from "@/components/Map";
 
 export default function Home() {
 
@@ -44,13 +46,13 @@ export default function Home() {
     const data1 = await resLocality.json();
     const data2 = await resCountry.json();
 
-    console.log(data1?.results[0])
-
     const locality = data1?.results[0].address_components[0].long_name;
     const country = data2?.results[0].address_components[0].long_name;
 
     setLocation({
+      // @ts-expect-error 
       longitude: longlat?.longitude,
+      // @ts-expect-error 
       latitude: longlat?.latitude,
       locality,
       country
@@ -100,19 +102,18 @@ export default function Home() {
     const result = Object.values(aggregatedData);
     setAggregateData(result);
 
-    console.log(result);
   }, [dumsorData])
 
 
 
   return (
-    <main className="flex h-screen w-full flex-row bg-white items-center justify-between gap-4 p-6">
-      <div className="w-1/3 h-full flex flex-col justify-between">
+    <main className="flex h-screen w-full flex-col-reverse md:flex-row bg-white items-center justify-between gap-4 ">
+      <div className="w-full md:w-1/3 md:h-full h-1/4 flex flex-col justify-between px-4 py-2 p-6">
         <h1 className="text-2xl font-semibold">Dumsor</h1>
         <div className="py-2 italic text-gray-500 text-sm">
           Showing data collected over the past hour
         </div>
-        <div className="h-full overflow-auto">
+        <div className="h-full overflow-auto hidden md:block ">
           {aggregateData.length > 0 ?
             <>
               {aggregateData.map((data: any, index: number) => {
@@ -134,6 +135,12 @@ export default function Home() {
                 {`No data to show. If you don't have light, press the button below before your phone goes off 👇🏽`}
               </div>
             </>}
+        </div>
+        <div className="md:hidden">
+          
+          <div className="text-gray-600">
+            {aggregateData.reduce((acc: any, curr: any) => curr.count + acc, 0)} reports
+          </div>
         </div>
         <Button disabled={loading} className="w-full" onClick={async () => {
           try {
@@ -158,8 +165,10 @@ export default function Home() {
 
         </Button>
       </div>
-      <div className="w-2/3 bg-gray-200 h-full">
-
+      <div className="w-full md:w-2/3 bg-gray-200 h-full">
+        <GoogleMap lat={location?.latitude ? location?.latitude : 0} lng={location?.longitude ? location?.longitude : 0}
+          markers={dumsorData}
+        />
       </div>
     </main>
   );

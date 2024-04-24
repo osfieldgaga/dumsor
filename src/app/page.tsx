@@ -1,13 +1,16 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import { getDoc, addDoc, collection } from "firebase/firestore";
+import { getDoc, addDoc, collection, onSnapshot, getDocs } from "firebase/firestore";
 import { firestore } from "../../lib/config";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react"
+import toast from 'react-hot-toast'
 
 export default function Home() {
 
   const [loading, setLoading] = useState(false)
+  const [dumsorData, setDumsorData] = useState<any>([])
+  const [aggregateData, setAggregateData] = useState<any>([])
 
   const saveData = async (data: any) => {
     try {
@@ -15,35 +18,129 @@ export default function Home() {
       await addDoc(dataRef, {
         ...data,
       })
+      toast.success("All good!")
     } catch (e) {
-      console.log("COuldn't add data:", e)
+      toast.success("Try again later!")
+      console.log("Couldn't add data:", e)
     }
   }
+
+  const [longlat, setLonglat] = useState<{ latitude: number, longitude: number }>();
+  const [location, setLocation] = useState<{ latitude: number, longitude: number, locality?: string, country?: string }>();
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      // Retrieve latitude & longitude coordinates from `navigator.geolocation` Web API
+      navigator.geolocation.getCurrentPosition(({ coords }) => {
+        const { latitude, longitude } = coords;
+        setLonglat({ latitude, longitude });
+      })
+    }
+  }, []);
+
+
+  const fetchApiData = async ({ latitude, longitude }: { latitude: number, longitude: number }) => {
+    const resLocality = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&result_type=locality&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
+    const resCountry = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&result_type=country&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
+    const data1 = await resLocality.json();
+    const data2 = await resCountry.json();
+
+    console.log(data1?.results[0])
+
+    const locality = data1?.results[0].address_components[0].long_name;
+    const country = data2?.results[0].address_components[0].long_name;
+
+    setLocation({
+      longitude: longlat?.longitude,
+      latitude: longlat?.latitude,
+      locality,
+      country
+    })
+
+
+  };
+  useEffect(() => {
+    if (longlat) {
+      fetchApiData({
+        latitude: longlat?.latitude,
+        longitude: longlat.longitude
+      })
+    }
+  }, [longlat])
+
+  useEffect(() => {
+    const dataRef = collection(firestore, "data");
+
+    const snap = onSnapshot(dataRef, (snapshot) => {
+      const snapData: any[] = []
+      snapshot.forEach((doc) => {
+        snapData.push(doc.data());
+      })
+
+      setDumsorData(snapData);
+    })
+
+    return () => {
+      snap()
+    }
+  }, [])
+
+  useEffect(() => {
+    // Use reduce to aggregate the data based on locality
+    const aggregatedData = dumsorData.reduce((acc: any, curr: any) => {
+      const locality = curr.locality;
+      if (acc[locality]) {
+        acc[locality].count++;
+      } else {
+        acc[locality] = { locality: locality, count: 1 };
+      }
+      return acc;
+    }, {});
+
+    // Convert the aggregatedData object to an array
+    const result = Object.values(aggregatedData);
+    setAggregateData(result);
+
+    console.log(result);
+  }, [dumsorData])
+
+
 
   return (
     <main className="flex h-screen w-full flex-row bg-white items-center justify-between gap-4 p-6">
       <div className="w-1/3 h-full flex flex-col justify-between">
-        <h1 className="text-xl font-semibold">Cases</h1>
+        <h1 className="text-2xl font-semibold">Dumsor</h1>
+        <div className="py-2 italic text-gray-500 text-sm">
+          Showing data collected over the past hour
+        </div>
         <div className="h-full overflow-auto">
-          <div className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-gray-50 my-2">
-            <div className="font-semibold">
-              Area
-            </div>
-            <div className="text-gray-600">
-              3 cases signaled
-            </div>
-          </div>
+          {aggregateData.length > 0 ?
+            <>
+              {aggregateData.map((data: any, index: number) => {
+                return <div key={index}>
+                  <div className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg bg-gray-50 my-2">
+                    <div className="font-semibold">
+                      {data.locality}
+                    </div>
+                    <div className="text-gray-600">
+                      {data.count} reports
+                    </div>
+                  </div>
+                </div>
+              })}
+            </>
+            :
+            <>
+              <div className="py-4">
+                {`No data to show. If you don't have light, press the button below before your phone goes off 👇🏽`}
+              </div>
+            </>}
         </div>
         <Button disabled={loading} className="w-full" onClick={async () => {
           try {
-            console.log("click")
             setLoading(true)
             await saveData({
-              lon: 12345,
-              lat: 5678,
+              ...location,
               timestamp: Date.now(),
-              town: "Prestea",
-              area: "GCP"
             })
             setLoading(false)
           } catch (e) {

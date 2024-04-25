@@ -142,7 +142,7 @@ export default function Home() {
         <div className="md:hidden">
 
           <div className="text-gray-600">
-            {aggregateData.reduce((acc: any, curr: any) => curr.count + acc, 0)} reports: {aggregateData.reduce((acc: any, curr: any) => curr.locality + ", " + acc, "")} latest at {new Date(dumsorData.reduce((maxTimestamp, point) => {
+            {aggregateData.reduce((acc: any, curr: any) => curr.count + acc, 0)} reports: {aggregateData.reduce((acc: any, curr: any) => curr.locality + ", " + acc, "")} latest at {new Date(dumsorData.reduce((maxTimestamp: any, point: any) => {
               return Math.max(maxTimestamp, point.timestamp);
             }, 0)).toLocaleTimeString()} 
 

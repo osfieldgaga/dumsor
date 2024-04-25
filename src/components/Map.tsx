@@ -29,7 +29,7 @@ function GoogleMap({ lat, lng, markers }: { lat: number, lng: number, markers?: 
                             lng: marker.longitude
                         }} /> */}
                         <Circle
-                            radius={2000}
+                            radius={1500}
                             center={{
                                 lat: marker.latitude,
                                 lng: marker.longitude

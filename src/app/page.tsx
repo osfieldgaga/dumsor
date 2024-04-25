@@ -41,7 +41,7 @@ export default function Home() {
 
 
   const fetchApiData = async ({ latitude, longitude }: { latitude: number, longitude: number }) => {
-    const resLocality = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&result_type=locality&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
+    const resLocality = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&result_type=locality|neighborhood|sublocality&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
     const resCountry = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&result_type=country&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
     const data1 = await resLocality.json();
     const data2 = await resCountry.json();
@@ -105,6 +105,25 @@ export default function Home() {
     const result = Object.values(aggregatedData);
     setAggregateData(result);
 
+
+    let tweet = "Dumsor update 🔦\n";
+      let link = "\nAdd yours 👉🏾 http://dumsor.vercel.app\n";
+      let hashtags = "\n\n#DumsorMustStop #DumsorTimetableNow"
+
+      let locations = "";
+
+      if (result.length > 0) {
+        result.map((data: any, index: number) => {
+            locations = locations + `${data.locality}: ${data.count}\n`;
+          });
+      } else {
+        link = "\nNo data to show. If you don't have light, go and report before your phone goes off 👉🏽 dumsor.vercel.app";
+      }
+
+      tweet = tweet + locations + link + hashtags;
+
+      console.log(tweet)
+
   }, [dumsorData])
 
 
@@ -112,7 +131,7 @@ export default function Home() {
   return (
     <main className="flex h-screen w-full flex-col-reverse md:flex-row bg-white items-center justify-between gap-4 ">
       <div className="w-full md:w-1/3 md:h-full h-2/5 flex flex-col justify-start gap-2 md:justify-between px-4 py-2 p-6">
-        <h1 className="text-2xl font-semibold">Dumsor</h1>
+        <h1 className="text-2xl font-semibold">Dumsor watch</h1>
         <div className="md:py-2 italic text-gray-500 text-sm">
           Showing data collected over the past hour
         </div>
@@ -142,9 +161,9 @@ export default function Home() {
         <div className="md:hidden">
 
           <div className="text-gray-600">
-            {aggregateData.reduce((acc: any, curr: any) => curr.count + acc, 0)} reports: {aggregateData.reduce((acc: any, curr: any) => curr.locality + ", " + acc, "")} latest at {new Date(dumsorData.reduce((maxTimestamp: any, point: any) => {
+            {`${aggregateData.reduce((acc: any, curr: any) => curr.count + acc, 0)} reports: ${aggregateData.reduce((acc: any, curr: any) => curr.locality + ", " + acc, "")} ${aggregateData.length > 0 ? `latest at ${new Date(dumsorData.reduce((maxTimestamp: any, point: any) => {
               return Math.max(maxTimestamp, point.timestamp);
-            }, 0)).toLocaleTimeString()} 
+            }, 0)).toLocaleTimeString()} ` : ""}`}
 
           </div>
         </div>
@@ -172,7 +191,7 @@ export default function Home() {
         </Button>
       </div>
       <div className="w-full md:w-2/3 bg-gray-200 h-full">
-        <GoogleMap lat={location?.latitude ? location?.latitude : 0} lng={location?.longitude ? location?.longitude : 0}
+        <GoogleMap lat={location?.latitude ? location?.latitude : 5.618533313268285} lng={location?.longitude ? location?.longitude : -0.17663492909490502}
           markers={dumsorData}
         />
       </div>

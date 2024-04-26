@@ -27,7 +27,7 @@ export default function Home() {
     }
   }
 
-  const [longlat, setLonglat] = useState<{ latitude: number, longitude: number }>();
+  const [longlat, setLonglat] = useState<{ latitude: number, longitude: number } | null>(null);
   const [location, setLocation] = useState<{ latitude: number, longitude: number, locality?: string, country?: string }>();
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -107,22 +107,22 @@ export default function Home() {
 
 
     let tweet = "Dumsor update 🔦\n";
-      let link = "\nAdd yours 👉🏾 http://dumsor.vercel.app\n";
-      let hashtags = "\n\n#DumsorMustStop #DumsorTimetableNow"
+    let link = "\nAdd yours 👉🏾 http://dumsor.vercel.app\n";
+    let hashtags = "\n\n#DumsorMustStop #DumsorTimetableNow"
 
-      let locations = "";
+    let locations = "";
 
-      if (result.length > 0) {
-        result.map((data: any, index: number) => {
-            locations = locations + `${data.locality}: ${data.count}\n`;
-          });
-      } else {
-        link = "\nNo data to show. If you don't have light, go and report before your phone goes off 👉🏽 dumsor.vercel.app";
-      }
+    if (result.length > 0) {
+      result.map((data: any, index: number) => {
+        locations = locations + `${data.locality}: ${data.count}\n`;
+      });
+    } else {
+      link = "\nNo data to show. If you don't have light, go and report before your phone goes off 👉🏽 dumsor.vercel.app";
+    }
 
-      tweet = tweet + locations + link + hashtags;
+    tweet = tweet + locations + link + hashtags;
 
-      console.log(tweet)
+    console.log(tweet)
 
   }, [dumsorData])
 
@@ -167,7 +167,7 @@ export default function Home() {
 
           </div>
         </div>
-        <Button disabled={loading} className="w-full" onClick={async () => {
+        <Button disabled={loading || !longlat} className="w-full" onClick={async () => {
           try {
             setLoading(true)
             await saveData({
@@ -179,14 +179,22 @@ export default function Home() {
             setLoading(false)
           }
         }}>
-          {loading ?
+          {longlat ?
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {loading ?
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                </>
+                :
+                <>
+                  Report dumsor at my location
+                </>}
             </>
             :
             <>
-              Report dumsor at my location
-            </>}
+            Location not available. Refresh
+            </>
+          }
 
         </Button>
       </div>
